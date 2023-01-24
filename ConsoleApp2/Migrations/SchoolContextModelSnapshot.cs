@@ -21,7 +21,7 @@ namespace ConsoleApp2.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("Lan", b =>
+            modelBuilder.Entity("Event", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -35,12 +35,35 @@ namespace ConsoleApp2.Migrations
                     b.Property<int>("Location")
                         .HasColumnType("int");
 
+                    b.Property<int>("MaxPlayer")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Lans", (string)null);
+                    b.ToTable("Events");
+                });
+
+            modelBuilder.Entity("Inscription", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EventId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("SeatId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "EventId");
+
+                    b.HasIndex("EventId");
+
+                    b.HasIndex("SeatId");
+
+                    b.ToTable("Inscriptions");
                 });
 
             modelBuilder.Entity("Seat", b =>
@@ -51,7 +74,7 @@ namespace ConsoleApp2.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int?>("LanId")
+                    b.Property<int>("EventId")
                         .HasColumnType("int");
 
                     b.Property<string>("Position")
@@ -60,9 +83,9 @@ namespace ConsoleApp2.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LanId");
+                    b.HasIndex("EventId");
 
-                    b.ToTable("Seat", (string)null);
+                    b.ToTable("Seats");
                 });
 
             modelBuilder.Entity("Tournament", b =>
@@ -76,7 +99,7 @@ namespace ConsoleApp2.Migrations
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("LanId")
+                    b.Property<int>("EventId")
                         .HasColumnType("int");
 
                     b.Property<int>("Name")
@@ -84,9 +107,9 @@ namespace ConsoleApp2.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("LanId");
+                    b.HasIndex("EventId");
 
-                    b.ToTable("Tournaments", (string)null);
+                    b.ToTable("Tournaments");
                 });
 
             modelBuilder.Entity("TournamentUser", b =>
@@ -101,7 +124,7 @@ namespace ConsoleApp2.Migrations
 
                     b.HasIndex("UsersId");
 
-                    b.ToTable("TournamentUser", (string)null);
+                    b.ToTable("TournamentUser");
                 });
 
             modelBuilder.Entity("User", b =>
@@ -117,43 +140,54 @@ namespace ConsoleApp2.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users");
                 });
 
-            modelBuilder.Entity("User_Lan", b =>
+            modelBuilder.Entity("Inscription", b =>
                 {
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.HasOne("Event", "Event")
+                        .WithMany("Inscriptions")
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.Property<int>("LanId")
-                        .HasColumnType("int");
+                    b.HasOne("Seat", "Seat")
+                        .WithMany()
+                        .HasForeignKey("SeatId");
 
-                    b.Property<int>("SeatId")
-                        .HasColumnType("int");
+                    b.HasOne("User", "User")
+                        .WithMany("Inscriptions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasKey("UserId", "LanId");
+                    b.Navigation("Event");
 
-                    b.HasIndex("LanId");
+                    b.Navigation("Seat");
 
-                    b.ToTable("User_Lan", (string)null);
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Seat", b =>
                 {
-                    b.HasOne("Lan", null)
-                        .WithMany("Seats")
-                        .HasForeignKey("LanId");
+                    b.HasOne("Event", "Event")
+                        .WithMany()
+                        .HasForeignKey("EventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("Tournament", b =>
                 {
-                    b.HasOne("Lan", "Lan")
+                    b.HasOne("Event", "Event")
                         .WithMany("Tournaments")
-                        .HasForeignKey("LanId")
+                        .HasForeignKey("EventId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Lan");
+                    b.Navigation("Event");
                 });
 
             modelBuilder.Entity("TournamentUser", b =>
@@ -171,37 +205,16 @@ namespace ConsoleApp2.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("User_Lan", b =>
+            modelBuilder.Entity("Event", b =>
                 {
-                    b.HasOne("Lan", "Lan")
-                        .WithMany("User_Lan")
-                        .HasForeignKey("LanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("User", "User")
-                        .WithMany("User_Lan")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Lan");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Lan", b =>
-                {
-                    b.Navigation("Seats");
+                    b.Navigation("Inscriptions");
 
                     b.Navigation("Tournaments");
-
-                    b.Navigation("User_Lan");
                 });
 
             modelBuilder.Entity("User", b =>
                 {
-                    b.Navigation("User_Lan");
+                    b.Navigation("Inscriptions");
                 });
 #pragma warning restore 612, 618
         }
