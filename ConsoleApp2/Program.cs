@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
+using System.Reflection.Metadata;
 
 public class User
 {
     public int Id { get; set; }
-    public int Name { get; set; }
+    public string Name { get; set; }
 
 
     public List<Inscription> Inscriptions { get; set; } = new();
@@ -13,10 +15,10 @@ public class User
 
 }
 
-public class Event 
+public class Event
 {
     public int Id { get; set; }
-    public int Location { get; set; }
+    public string Location { get; set; }
     public DateTime StartDate { get; set; }
     public DateTime EndDate { get; set; }
     public int MaxPlayer { get; set; }
@@ -53,7 +55,7 @@ public class Inscription
     public Event Event { get; set; }
 
     //aditional information
-    public int? SeatId { get; set; }
+    public int SeatId { get; set; }
     public Seat Seat { get; set; }
 }
 
@@ -66,6 +68,7 @@ public class Seat
     public int EventId { get; set; }
     public Event Event { get; set; }
 
+    public Inscription Inscription { get; set; }
 
 
 }
@@ -83,12 +86,38 @@ public class SchoolContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
-        optionsBuilder.UseSqlServer(@"Server=localhost\SQLEXPRESS;Database=FinalProjectTest;Trusted_Connection=True;");
+        //localhost\SQLEXPRESS
+        optionsBuilder.UseSqlServer(@"Server=Localhost;Database=FinalProjectTest5;Trusted_Connection=True;");
 
     }
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Inscription>().HasKey(ul => new { ul.UserId, ul.EventId });
+        modelBuilder.Entity<Inscription>().HasKey(ul => new { ul.UserId, ul.EventId, ul.SeatId });
+
+        modelBuilder.Entity<Inscription>()
+            .HasOne<Event>(i => i.Event)
+            .WithMany(e => e.Inscriptions)
+            .HasForeignKey(i => i.EventId);
+        modelBuilder.Entity<Inscription>()
+          .HasOne(i => i.User)
+          .WithMany(e => e.Inscriptions)
+          .HasForeignKey(i => i.UserId);
+        modelBuilder.Entity<Inscription>()
+         .HasOne<Seat>(i => i.Seat)
+         .WithOne(e => e.Inscription)
+         .HasForeignKey<Inscription>(i => i.SeatId)
+         .OnDelete(DeleteBehavior.Restrict);
+
+
+        modelBuilder.Entity<Event>().HasData(new Event { Id = 1, StartDate = new DateTime(), EndDate = new DateTime(), Location = "Cegep", MaxPlayer = 30 });
+
+        modelBuilder.Entity<User>().HasData(new User { Id = 1, Name = "Adel Kouaou" });
+
+        modelBuilder.Entity<Seat>().HasData(new Seat { Id = 1, EventId = 1, Position = "A2", });
+
+
+        modelBuilder.Entity<Inscription>().HasData(new Inscription() { EventId = 1, UserId = 1, SeatId = 1 });
+
     }
 }
 
@@ -96,10 +125,20 @@ class Program
 {
     static void Main(string[] args)
     {
-        var dateOnly = new DateOnly();
-        Console.WriteLine(dateOnly);
+        using (var context = new SchoolContext())
+        {
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
 
-        //Console.WriteLine(new TimeOnly());
+            var inscription = context.Inscriptions.Find(1,1,1);
+            var test = context.Seats.Find(1);
+
+            context.Remove(test);
+
+            //var test2 = context.Seats.Find(1);
+            //context.Remove(test);
+            context.SaveChanges();
+        }
         Console.ReadLine();
     }
 }

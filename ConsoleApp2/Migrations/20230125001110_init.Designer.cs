@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleApp2.Migrations
 {
     [DbContext(typeof(SchoolContext))]
-    [Migration("20230124190634_test")]
-    partial class test
+    [Migration("20230125001110_init")]
+    partial class init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -34,8 +34,9 @@ namespace ConsoleApp2.Migrations
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("Location")
-                        .HasColumnType("int");
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("MaxPlayer")
                         .HasColumnType("int");
@@ -46,6 +47,16 @@ namespace ConsoleApp2.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Events");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            EndDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Location = "Cegep",
+                            MaxPlayer = 30,
+                            StartDate = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("Inscription", b =>
@@ -56,16 +67,25 @@ namespace ConsoleApp2.Migrations
                     b.Property<int>("EventId")
                         .HasColumnType("int");
 
-                    b.Property<int?>("SeatId")
+                    b.Property<int>("SeatId")
                         .HasColumnType("int");
 
-                    b.HasKey("UserId", "EventId");
+                    b.HasKey("UserId", "EventId", "SeatId");
 
                     b.HasIndex("EventId");
 
-                    b.HasIndex("SeatId");
+                    b.HasIndex("SeatId")
+                        .IsUnique();
 
                     b.ToTable("Inscriptions");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            EventId = 1,
+                            SeatId = 1
+                        });
                 });
 
             modelBuilder.Entity("Seat", b =>
@@ -88,6 +108,14 @@ namespace ConsoleApp2.Migrations
                     b.HasIndex("EventId");
 
                     b.ToTable("Seats");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            EventId = 1,
+                            Position = "A2"
+                        });
                 });
 
             modelBuilder.Entity("Tournament", b =>
@@ -137,12 +165,20 @@ namespace ConsoleApp2.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<int>("Name")
-                        .HasColumnType("int");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 1,
+                            Name = "Adel Kouaou"
+                        });
                 });
 
             modelBuilder.Entity("Inscription", b =>
@@ -154,8 +190,10 @@ namespace ConsoleApp2.Migrations
                         .IsRequired();
 
                     b.HasOne("Seat", "Seat")
-                        .WithMany()
-                        .HasForeignKey("SeatId");
+                        .WithOne("Inscription")
+                        .HasForeignKey("Inscription", "SeatId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("User", "User")
                         .WithMany("Inscriptions")
@@ -212,6 +250,12 @@ namespace ConsoleApp2.Migrations
                     b.Navigation("Inscriptions");
 
                     b.Navigation("Tournaments");
+                });
+
+            modelBuilder.Entity("Seat", b =>
+                {
+                    b.Navigation("Inscription")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("User", b =>

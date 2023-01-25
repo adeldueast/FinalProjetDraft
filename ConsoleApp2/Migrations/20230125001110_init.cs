@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ConsoleApp2.Migrations
 {
-    public partial class test : Migration
+    public partial class init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -15,7 +15,7 @@ namespace ConsoleApp2.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Location = table.Column<int>(type: "int", nullable: false),
+                    Location = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
                     MaxPlayer = table.Column<int>(type: "int", nullable: false)
@@ -31,7 +31,7 @@ namespace ConsoleApp2.Migrations
                 {
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<int>(type: "int", nullable: false)
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -85,11 +85,11 @@ namespace ConsoleApp2.Migrations
                 {
                     UserId = table.Column<int>(type: "int", nullable: false),
                     EventId = table.Column<int>(type: "int", nullable: false),
-                    SeatId = table.Column<int>(type: "int", nullable: true)
+                    SeatId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Inscriptions", x => new { x.UserId, x.EventId });
+                    table.PrimaryKey("PK_Inscriptions", x => new { x.UserId, x.EventId, x.SeatId });
                     table.ForeignKey(
                         name: "FK_Inscriptions_Events_EventId",
                         column: x => x.EventId,
@@ -100,7 +100,8 @@ namespace ConsoleApp2.Migrations
                         name: "FK_Inscriptions_Seats_SeatId",
                         column: x => x.SeatId,
                         principalTable: "Seats",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Inscriptions_Users_UserId",
                         column: x => x.UserId,
@@ -133,6 +134,26 @@ namespace ConsoleApp2.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
+            migrationBuilder.InsertData(
+                table: "Events",
+                columns: new[] { "Id", "EndDate", "Location", "MaxPlayer", "StartDate" },
+                values: new object[] { 1, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), "Cegep", 30, new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified) });
+
+            migrationBuilder.InsertData(
+                table: "Users",
+                columns: new[] { "Id", "Name" },
+                values: new object[] { 1, "Adel Kouaou" });
+
+            migrationBuilder.InsertData(
+                table: "Seats",
+                columns: new[] { "Id", "EventId", "Position" },
+                values: new object[] { 1, 1, "A2" });
+
+            migrationBuilder.InsertData(
+                table: "Inscriptions",
+                columns: new[] { "EventId", "SeatId", "UserId" },
+                values: new object[] { 1, 1, 1 });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Inscriptions_EventId",
                 table: "Inscriptions",
@@ -141,7 +162,8 @@ namespace ConsoleApp2.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Inscriptions_SeatId",
                 table: "Inscriptions",
-                column: "SeatId");
+                column: "SeatId",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Seats_EventId",
